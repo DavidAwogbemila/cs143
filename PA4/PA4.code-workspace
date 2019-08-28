@@ -1,0 +1,17 @@
+{
+	"folders": [
+		{
+			"path": "."
+		}
+	],
+	"settings": {
+		"[C++]": {
+			"includePath": [
+				"/usr/class/include"
+			]
+		},
+		"files.associations": {
+			"algorithm": "cpp"
+		}
+	}
+}

@@ -1,0 +1,17 @@
+
+**/*.o
+**/*.swp
+
+**/lexer
+**/parser
+**/myparser
+**/semant
+**/mysemant
+**/cgen
+**/mycoolc
+
+**/.vscode/
+**/grading/
+**/mygrading/
+*J/
+

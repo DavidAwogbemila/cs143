@@ -1,0 +1,4 @@
+*.o
+grading/*
+mygrading/*
+check_tests.sh
