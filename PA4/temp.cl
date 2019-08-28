@@ -6,6 +6,6 @@ class B inherits A{
 
 };
 
-class C {
+class C inherits B{
 
 };

@@ -98,9 +98,9 @@ ClassTable::ClassTable(Classes classes) : semant_errors(0) , error_stream(cerr) 
   mycode::inheritance_graph* i_graph = mycode::build_inheritance_graph(classes_list, Object, faulty_class);
 
   if (!faulty_class) {
-    DEBUG_PRINT(std::cout << "Built inheritance graph successfully." << std::endl);
+    DEBUG_ACTION(std::cout << "Built inheritance graph successfully." << std::endl);
   } else {
-    DEBUG_PRINT(std::cout << "Unable to build inheritance graph. Program is semantically incorrect." << std::endl);
+    DEBUG_ACTION(std::cout << "Unable to build inheritance graph. Program is semantically incorrect." << std::endl);
     semant_error(faulty_class);
   }
 }

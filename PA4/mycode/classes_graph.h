@@ -5,9 +5,9 @@
 #define DEBUGGING_
 
 #ifdef DEBUGGING
-#define DEBUG_PRINT(x) x
+#define DEBUG_ACTION(x) x
 #else
-#define DEBUG_PRINT(x)
+#define DEBUG_ACTION(x)
 #endif
 
 #include "stringtab.h"
@@ -35,7 +35,7 @@ bool add_class_to_inheritance_graph(graph_node*& root, const Class_ c) {
   
   if (classes_in_i_graph.find(class_to_add->get_parent_name()) == classes_in_i_graph.cend()) {
     classes_not_ready.push(c);
-    DEBUG_PRINT(std::cout << "Class " 
+    DEBUG_ACTION(std::cout << "Class " 
                           << class_to_add->get_name()
                           << " was not ready because "
                           << class_to_add->get_parent_name()
@@ -50,7 +50,7 @@ bool add_class_to_inheritance_graph(graph_node*& root, const Class_ c) {
         root->first_child->immediate_sibling = NULL;
         root->first_child->first_child = NULL;
         root->first_child->name = class_to_add->get_name();
-        DEBUG_PRINT(std::cout << "Adding class "
+        DEBUG_ACTION(std::cout << "Adding class "
                                << class_to_add->get_name()
                                << " whose parent is "
                                << class_to_add->get_parent_name()
@@ -91,7 +91,7 @@ inheritance_graph* build_inheritance_graph(std::vector<Class_> classes_list, Sym
   
   classes_in_i_graph.emplace(root_symbol);
   
-  DEBUG_PRINT(std::cout << "There are " << classes_list.size() << " classes with which to build" << std::endl);
+  DEBUG_ACTION(std::cout << "There are " << classes_list.size() << " classes with which to build" << std::endl);
   for (Class_ c : classes_list) {
       add_class_to_inheritance_graph(root, c);
   }
@@ -104,7 +104,7 @@ inheritance_graph* build_inheritance_graph(std::vector<Class_> classes_list, Sym
     if (!add_class_to_inheritance_graph(root, curr_class)) {
       if (classes_checked_second_time.find(curr_class) != classes_checked_second_time.cend()) {
         faulty_class = curr_class;
-        DEBUG_PRINT(std::cout << "This was where I failed" << std::endl);
+        DEBUG_ACTION(std::cout << "This was where I failed" << std::endl);
         break;
       }
 
