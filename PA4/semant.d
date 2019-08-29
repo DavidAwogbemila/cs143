@@ -1,8 +1,5 @@
-semant.o semant.d : semant.cc semant.h cool-tree.h ../../include/PA4/tree.h \
- ../../include/PA4/copyright.h ../../include/PA4/stringtab.h \
- ../../include/PA4/list.h ../../include/PA4/cool-io.h \
- cool-tree.handcode.h ../../include/PA4/cool.h \
- ../../include/PA4/stringtab.h ../../include/PA4/symtab.h \
- ../../include/PA4/list.h ../../include/PA4/utilities.h \
- mycode/classes_graph.h cool-tree.h mycode/init_symbol_table.h \
- mycode/naming_scope_validation.h
+semant.o semant.d : semant.cc semant.h cool-tree.h tree.h copyright.h stringtab.h \
+ list.h cool-io.h cool-tree.handcode.h cool.h mycode/expression_classes.h \
+ symtab.h utilities.h mycode/classes_graph.h stringtab.h copyright.h \
+ cool-tree.h mycode/init_symbol_table.h symtab.h \
+ mycode/naming_scope_validation.h mycode/expression_validation.h

@@ -118,7 +118,13 @@ ClassTable::ClassTable(Classes classes) : semant_errors(0) , error_stream(cerr) 
   mycode::initialize_symbol_table_with_globals(classes_list, symbol_table);
   for (Class_ c : user_classes_list) {
     DEBUG_ACTION(std::cout << "validating class " << ((class__class*)c->copy_Class_())->get_name() << std::endl);
-    if (!validate_class(c, symbol_table) ) {
+    if (validate_class(c, symbol_table) ) {
+      DEBUG_ACTION(std::cout << "Class " 
+                             << ((class__class*)c->copy_Class_())->get_name()
+                             << " was okay!"
+                             << std::endl);
+      
+    } else {
       DEBUG_ACTION(std::cout << "Error! while validating class " << ((class__class*)c->copy_Class_())->get_name() << std::endl);
       semant_error(c);
     }
