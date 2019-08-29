@@ -38,7 +38,13 @@ namespace mycode {
       }
 
     } else if (type == 'm') { // The feature is an method.
-      DEBUG_ACTION(std::cout << "validating method " << ((attr_class*)c->copy_Feature())->get_name() << std::endl);
+      attr_class* method = (attr_class*)c->copy_Feature();
+      DEBUG_ACTION(std::cout << "validating method " << ((method_class*)c->copy_Feature())->get_name() << std::endl);
+      if (sym_tab->lookup(method->get_type_decl())) {
+        // Then, if initialization expression is okay return true, else false.
+        DEBUG_ACTION(std::cout << "Done validating attribute " << ((method_class*)c->copy_Feature())->get_name() << std::endl);
+        return true;
+      }
     }
     
 
