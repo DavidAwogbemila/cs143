@@ -50,6 +50,8 @@ public:
    tree_node *copy()		 { return copy_Feature(); }
    virtual Feature copy_Feature() = 0;
 
+   virtual char get_type() const = 0;
+
 #ifdef Feature_EXTRAS
    Feature_EXTRAS
 #endif
@@ -162,8 +164,9 @@ public:
    Class_ copy_Class_();
    void dump(ostream& stream, int n);
 
-   Symbol get_name() { return copy_Symbol(name); }
-   Symbol get_parent_name() { return copy_Symbol(parent); }
+   Symbol get_name() const { return copy_Symbol(name); }
+   Symbol get_parent_name() const { return copy_Symbol(parent); }
+   Features get_features() const { return features->copy_list(); }
 
 #ifdef Class__SHARED_EXTRAS
    Class__SHARED_EXTRAS
@@ -190,6 +193,8 @@ public:
    }
    Feature copy_Feature();
    void dump(ostream& stream, int n);
+   Symbol get_name() const { return copy_Symbol(name); }
+   virtual char get_type() const override { return 'm'; }
 
 #ifdef Feature_SHARED_EXTRAS
    Feature_SHARED_EXTRAS
@@ -214,6 +219,9 @@ public:
    }
    Feature copy_Feature();
    void dump(ostream& stream, int n);
+   Symbol get_name() const { return copy_Symbol(name); }
+   Symbol get_type_decl() const { return copy_Symbol(type_decl);}
+   virtual char get_type() const override { return 'a'; }
 
 #ifdef Feature_SHARED_EXTRAS
    Feature_SHARED_EXTRAS

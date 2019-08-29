@@ -4,12 +4,15 @@
 #include <stdio.h>
 #include <stdarg.h>
 #include "semant.h"
+#include "symtab.h"
 #include "utilities.h"
 
 #include <vector>
 #include <string>
 
 #include "mycode/classes_graph.h"
+#include "mycode/init_symbol_table.h"
+#include "mycode/naming_scope_validation.h"
 
 extern int semant_debug;
 extern char *curr_filename;
@@ -85,23 +88,40 @@ static void initialize_constants(void)
   val         = idtable.add_string("_val");
 }
 
+static std::vector<Class_> classes_list;
+
 ClassTable::ClassTable(Classes classes) : semant_errors(0) , error_stream(cerr) {
 
   /* Fill this in */
-  std::vector<Class_> classes_list;
+  install_basic_classes();
   Class_ faulty_class = NULL;
+  std::vector<Class_> user_classes_list;
 
   for (int i = classes->first(); classes->more(i); i = classes->next(i)) {
     classes_list.push_back(classes->nth(i));
+    user_classes_list.push_back(classes->nth(i));
   }
 
-  mycode::inheritance_graph* i_graph = mycode::build_inheritance_graph(classes_list, Object, faulty_class);
+  mycode::inheritance_graph* i_graph = mycode::build_inheritance_graph(classes_list, faulty_class);
 
   if (!faulty_class) {
     DEBUG_ACTION(std::cout << "Built inheritance graph successfully." << std::endl);
   } else {
     DEBUG_ACTION(std::cout << "Unable to build inheritance graph. Program is semantically incorrect." << std::endl);
     semant_error(faulty_class);
+    exit(1);
+  }
+
+  SymbolTable<Symbol, mycode::symbol_table_data>* symbol_table
+    (new SymbolTable<Symbol, mycode::symbol_table_data>);
+
+  mycode::initialize_symbol_table_with_globals(classes_list, symbol_table);
+  for (Class_ c : user_classes_list) {
+    DEBUG_ACTION(std::cout << "validating class " << ((class__class*)c->copy_Class_())->get_name() << std::endl);
+    if (!validate_class(c, symbol_table) ) {
+      DEBUG_ACTION(std::cout << "Error! while validating class " << ((class__class*)c->copy_Class_())->get_name() << std::endl);
+      semant_error(c);
+    }
   }
 }
 
@@ -201,6 +221,18 @@ void ClassTable::install_basic_classes() {
 				      Str, 
 				      no_expr()))),
 	     filename);
+
+
+
+
+
+
+  
+  classes_list.push_back(Object_class);
+  classes_list.push_back(IO_class);
+  classes_list.push_back(Int_class);
+  classes_list.push_back(Bool_class);
+  classes_list.push_back(Str_class);
 }
 
 ////////////////////////////////////////////////////////////////////

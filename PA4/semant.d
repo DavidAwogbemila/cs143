@@ -4,4 +4,5 @@ semant.o semant.d : semant.cc semant.h cool-tree.h ../../include/PA4/tree.h \
  cool-tree.handcode.h ../../include/PA4/cool.h \
  ../../include/PA4/stringtab.h ../../include/PA4/symtab.h \
  ../../include/PA4/list.h ../../include/PA4/utilities.h \
- mycode/classes_graph.h cool-tree.h
+ mycode/classes_graph.h cool-tree.h mycode/init_symbol_table.h \
+ mycode/naming_scope_validation.h
