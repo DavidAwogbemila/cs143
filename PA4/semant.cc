@@ -11,7 +11,7 @@
 #include <string>
 
 #include "mycode/classes_graph.h"
-#include "mycode/init_symbol_table.h"
+#include "mycode/symbol_table_data.h"
 #include "mycode/naming_scope_validation.h"
 
 extern int semant_debug;
@@ -90,6 +90,44 @@ static void initialize_constants(void)
 
 static std::vector<Class_> classes_list;
 
+namespace mycode {
+
+  // Store classes, their features and their parents in symboll table.
+  void initialize_symbol_table_with_globals(std::vector<Class_>& classes_list,
+                                            SymbolTable<Symbol, symbol_table_data>*& sym_tab) {
+    sym_tab->enterscope();
+
+    for (Class_ c: classes_list) {
+      class__class* c_info = (class__class*)c->copy_Class_();
+      symbol_table_data* data = new symbol_table_data;
+      data->features = c_info->get_features();
+      data->parent = c_info->get_parent_name();
+      data->return_type = NULL;
+      data->type = NULL;
+      sym_tab->addid(c_info->get_name(), data);
+    }
+  }
+
+  // Store classes, their features and their parents in symboll table.
+  void init_feature_set_scope(Features class_features,
+                              SymbolTable<Symbol, symbol_table_data>*& sym_tab) {
+    for(int i = class_features->first(); class_features->more(i); i = class_features->next(i)) {
+      symbol_table_data* data = new symbol_table_data;
+      char feature_type = class_features->nth(i)->get_type();
+      data->features = NULL;
+      data->parent = NULL;
+      data->return_type = feature_type == 'm' ? class_features->nth(i)->get_return_type() : NULL ;
+      data->type = feature_type == 'a' ? class_features->nth(i)->get_type_decl() : NULL ;
+      sym_tab->addid(class_features->nth(i)->get_name(), data);
+    }
+
+    sym_tab->addid(SELF_TYPE, new symbol_table_data({}));
+    sym_tab->addid(self, new symbol_table_data({}));
+
+  }
+
+}
+
 ClassTable::ClassTable(Classes classes) : semant_errors(0) , error_stream(cerr) {
 
   /* Fill this in */
@@ -116,9 +154,10 @@ ClassTable::ClassTable(Classes classes) : semant_errors(0) , error_stream(cerr) 
     (new SymbolTable<Symbol, mycode::symbol_table_data>);
 
   mycode::initialize_symbol_table_with_globals(classes_list, symbol_table);
+  
   for (Class_ c : user_classes_list) {
     DEBUG_ACTION(std::cout << "validating class " << ((class__class*)c->copy_Class_())->get_name() << std::endl);
-    if (validate_class(c, symbol_table) ) {
+    if (mycode::validate_class(c, symbol_table) ) {
       DEBUG_ACTION(std::cout << "Class " 
                              << ((class__class*)c->copy_Class_())->get_name()
                              << " was okay!"

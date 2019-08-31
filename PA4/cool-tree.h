@@ -312,6 +312,7 @@ public:
    void dump(ostream& stream, int n);
    expr_type get_expr_type() { return expr_type::EXP_ASSIGN; }
    Expression get_expr() const { return expr->copy_Expression(); }
+   Symbol get_name() const { return copy_Symbol(name); }
 
 #ifdef Expression_SHARED_EXTRAS
    Expression_SHARED_EXTRAS

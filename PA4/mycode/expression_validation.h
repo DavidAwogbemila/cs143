@@ -1,11 +1,10 @@
 
 #include "cool-tree.h"
 #include "symtab.h"
-#include "init_symbol_table.h"
 
 namespace mycode {
 
-bool object_in_ancestry_attribs(object_class* obj, const Symbol c, SymbolTable<Symbol, symbol_table_data>*& sym_tab);
+bool object_in_ancestry_attribs(Symbol sym, const Symbol c, SymbolTable<Symbol, symbol_table_data>*& sym_tab);
 
 bool validate_exp_assign(Class_ in_class, Feature in_feature, Expression e, SymbolTable<Symbol, symbol_table_data>* sym_tab);
 bool validate_exp_static_dispatch(Class_ in_class, Feature in_feature, Expression e, SymbolTable<Symbol, symbol_table_data>* sym_tab);
@@ -31,10 +30,10 @@ bool validate_exp_new_(Class_ in_class, Feature in_feature, Expression e, Symbol
 bool validate_exp_isvoid(Class_ in_class, Feature in_feature, Expression e, SymbolTable<Symbol, symbol_table_data>* sym_tab);
 bool validate_exp_no_expr(Class_ in_class, Feature in_feature, Expression e, SymbolTable<Symbol, symbol_table_data>* sym_tab);
 bool validate_exp_object(Class_ in_class, Feature in_feature, Expression e, SymbolTable<Symbol, symbol_table_data>* sym_tab);
-
 bool validate_case(Class_ in_class, Feature in_feature, Case e, SymbolTable<Symbol, symbol_table_data>* sym_tab);
 
 bool validate_expression(Class_ in_class, Feature in_feature, Expression e, SymbolTable<Symbol, symbol_table_data>*& sym_tab) {
+  DEBUG_ACTION(std::cout << (int)e->get_expr_type() << std::endl);
   switch (e->get_expr_type()) {
     case expr_type::EXP_ASSIGN: {
       assign_class* assign_exp = (assign_class*) e;
@@ -121,6 +120,7 @@ bool validate_expression(Class_ in_class, Feature in_feature, Expression e, Symb
       return validate_exp_object(in_class, in_feature, object_exp, sym_tab);
     }
     defualt: { 
+      DEBUG_ACTION(std::cout << "Default VALIDATION!" <<std::endl);
       return false;
     }
   }
@@ -130,8 +130,12 @@ bool validate_expression(Class_ in_class, Feature in_feature, Expression e, Symb
 bool validate_exp_assign(Class_ in_class, Feature in_feature, Expression e, SymbolTable<Symbol, symbol_table_data>* sym_tab) {
   assign_class* assign_exp = (assign_class*) e;
   /* TODO: Do type-checking on type being assigned to. */
-  return validate_expression(in_class, in_feature, assign_exp->get_expr(), sym_tab);
+  if (sym_tab->lookup(assign_exp->get_name()) || \
+      object_in_ancestry_attribs(assign_exp->get_name(), in_class->get_name(), sym_tab)) {
+    return validate_expression(in_class, in_feature, assign_exp->get_expr(), sym_tab);
   }
+  return false;
+}
 bool validate_exp_static_dispatch(Class_ in_class, Feature in_feature, Expression e, SymbolTable<Symbol, symbol_table_data>* sym_tab) {
   static_dispatch_class* s_dispatch_exp = (static_dispatch_class*) e;
   Expression expr = s_dispatch_exp->get_expr();
@@ -146,14 +150,18 @@ bool validate_exp_static_dispatch(Class_ in_class, Feature in_feature, Expressio
   }
 
   return still_valid;
-  /* TODO: Typechecking! */
+  /** TODO: Typechecking:
+   * (1) Check that type_name is an ancestor of the expr's type.
+   * (2) Check that func_name is a feature (method, specifically) of type_name.
+   */
+  DEBUG_ACTION(std::cout << "STATIC DISPATCH VALIDATION!" <<std::endl);
 }
 bool validate_exp_dispatch(Class_ in_class, Feature in_feature, Expression e, SymbolTable<Symbol, symbol_table_data>* sym_tab) {
   dispatch_class* dispatch_exp = (dispatch_class*) e;
   Expression expr = dispatch_exp->get_expr();
   Symbol func_name = dispatch_exp->get_name();
   Expressions args = dispatch_exp->get_args();
-
+  DEBUG_ACTION(std::cout << "DISPATCH VALIDATION!" <<std::endl);
   bool still_valid = validate_expression(in_class, in_feature, expr, sym_tab);
 
   for (int i = args->first(); args->more(i); i = args->next(i)) {
@@ -161,19 +169,20 @@ bool validate_exp_dispatch(Class_ in_class, Feature in_feature, Expression e, Sy
   }
 
   return still_valid;
-  /* TODO: Typechecking! */
+  /** 
+   * TODO: Typechecking:
+   * (1) Check that func_name is a feature (method, specifically) of the type of expr.
+   */
 }
 bool validate_exp_cond(Class_ in_class, Feature in_feature, Expression e, SymbolTable<Symbol, symbol_table_data>* sym_tab) {
   cond_class* cond_exp = (cond_class*) e;
   Expression pred = cond_exp->get_pred();
-  Expression then_exp = cond_exp->get_pred();
-  Expression else_exp = cond_exp->get_pred();
+  Expression then_exp = cond_exp->get_then_exp();
+  Expression else_exp = cond_exp->get_else_exp();
   /* TODO: Typecheck cond for Bool-ness */
   return validate_expression(in_class, in_feature, pred, sym_tab) && \
          validate_expression(in_class, in_feature, then_exp, sym_tab) && \
          validate_expression(in_class, in_feature, else_exp, sym_tab);
-
-
 }
 bool validate_exp_loop(Class_ in_class, Feature in_feature, Expression e, SymbolTable<Symbol, symbol_table_data>* sym_tab) {
   loop_class* loop_exp = (loop_class*) e;
@@ -309,33 +318,41 @@ bool validate_exp_no_expr(Class_ in_class, Feature in_feature, Expression e, Sym
   return true;
 }
 bool validate_exp_object(Class_ in_class, Feature in_feature, Expression e, SymbolTable<Symbol, symbol_table_data>* sym_tab) {
+  bool okay;
   object_class* object_exp = (object_class*) e;
-  if (sym_tab->probe(object_exp->get_name())) {
+  if (sym_tab->lookup(object_exp->get_name())) {
     if (object_exp->get_name() == in_feature->get_name() && 
-        !object_in_ancestry_attribs(object_exp, in_class->get_name(), sym_tab)) {
-      return false;
+        !object_in_ancestry_attribs(object_exp->get_name(), in_class->get_name(), sym_tab)) {
+      okay =  false;
     }
-    return true;
-  } else if (object_in_ancestry_attribs(object_exp, in_class->get_name(), sym_tab)) {
-    return true;
+    okay =  true;
+  } else if (object_in_ancestry_attribs(object_exp->get_name(), in_class->get_name(), sym_tab)) {
+    okay = true;
   }
-  return false;
+
+  return okay;
 }
 
 /**
-  * This function checks whether an object is a feature of any class in the 
+  * This function checks whether a symbol is a feature of any class in the 
   * ancestry of that object. Of course, it needs the symbol table to do this.
+  * 
+  * @param sym The symbol being checked for (maybe an attribute or a method.)
+  *        It must surely be an object identifier (attribute or method).
+  * @param c The class whose ancestors are being checked. It must surely be a
+  *        type (class) identifier
+  * @param sym_tab The symbol table.
   */
-  bool object_in_ancestry_attribs(object_class* obj, const Symbol c, SymbolTable<Symbol, symbol_table_data>*& sym_tab) {
+  bool object_in_ancestry_attribs(Symbol sym, const Symbol c, SymbolTable<Symbol, symbol_table_data>*& sym_tab) {
     symbol_table_data* class_data = sym_tab->lookup(c);
     symbol_table_data* class_parent_data = sym_tab->lookup(class_data->parent);
     if (class_parent_data) {
       for (int i = class_parent_data->features->first(); class_parent_data->features->more(i); i = class_parent_data->features->next(i)) {
-        if (obj->get_name() == class_parent_data->features->nth(i)->get_name()) {
+        if (sym == class_parent_data->features->nth(i)->get_name()) {
           return true;
         }
       }
-    return object_in_ancestry_attribs(obj, class_data->parent, sym_tab);
+    return object_in_ancestry_attribs(sym, class_data->parent, sym_tab);
     }
     return false;
   }

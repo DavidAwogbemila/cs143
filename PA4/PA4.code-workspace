@@ -58,7 +58,11 @@
 			"stdexcept": "cpp",
 			"streambuf": "cpp",
 			"cinttypes": "cpp",
-			"typeinfo": "cpp"
+			"typeinfo": "cpp",
+			"cerrno": "cpp",
+			"ios": "cpp",
+			"locale": "cpp",
+			"queue": "cpp"
 		},
 		"editor.tabSize": 2,
 		"editor.insertSpaces": true
