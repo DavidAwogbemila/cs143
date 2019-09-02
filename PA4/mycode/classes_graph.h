@@ -3,14 +3,6 @@
 #include <queue>
 #include <unistd.h>
 
-#define DEBUGGING
-
-#ifdef DEBUGGING
-#define DEBUG_ACTION(x) x << std::flush
-#else
-#define DEBUG_ACTION(x)
-#endif
-
 #include "stringtab.h"
 #include "cool-tree.h"
 

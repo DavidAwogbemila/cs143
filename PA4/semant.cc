@@ -26,7 +26,7 @@ extern char *curr_filename;
 // as fixed names used by the runtime system.
 //
 //////////////////////////////////////////////////////////////////////
-static Symbol 
+Symbol 
   arg,
   arg2,
   Bool,
@@ -108,24 +108,6 @@ namespace mycode {
     }
   }
 
-  // Store classes, their features and their parents in symboll table.
-  void init_feature_set_scope(Features class_features,
-                              SymbolTable<Symbol, symbol_table_data>*& sym_tab) {
-    for(int i = class_features->first(); class_features->more(i); i = class_features->next(i)) {
-      symbol_table_data* data = new symbol_table_data;
-      char feature_type = class_features->nth(i)->get_type();
-      data->features = NULL;
-      data->parent = NULL;
-      data->return_type = feature_type == 'm' ? class_features->nth(i)->get_return_type() : NULL ;
-      data->type = feature_type == 'a' ? class_features->nth(i)->get_type_decl() : NULL ;
-      sym_tab->addid(class_features->nth(i)->get_name(), data);
-    }
-
-    sym_tab->addid(SELF_TYPE, new symbol_table_data({}));
-    sym_tab->addid(self, new symbol_table_data({}));
-
-  }
-
 }
 
 ClassTable::ClassTable(Classes classes) : semant_errors(0) , error_stream(cerr) {
@@ -156,7 +138,7 @@ ClassTable::ClassTable(Classes classes) : semant_errors(0) , error_stream(cerr) 
   mycode::initialize_symbol_table_with_globals(classes_list, symbol_table);
   
   for (Class_ c : user_classes_list) {
-    DEBUG_ACTION(std::cout << "validating class " << ((class__class*)c->copy_Class_())->get_name() << std::endl);
+    DEBUG_ACTION(std::cout << "Validating class " << ((class__class*)c->copy_Class_())->get_name() << std::endl);
     if (mycode::validate_class(c, symbol_table) ) {
       DEBUG_ACTION(std::cout << "Class " 
                              << ((class__class*)c->copy_Class_())->get_name()

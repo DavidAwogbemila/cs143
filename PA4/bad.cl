@@ -5,7 +5,7 @@ class C {
            {
 		a <- x;
 		b <- y;
-		--self;
+		self;
            }
 	};
 };
