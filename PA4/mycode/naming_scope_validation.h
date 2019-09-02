@@ -2,6 +2,7 @@
 #include "symtab.h"
 #include "expression_classes.h"
 #include "expression_validation.h"
+#include "typechecking.h"
 
 namespace mycode {
 
@@ -27,13 +28,23 @@ namespace mycode {
     char type = c->get_type(); // whether method (m) or attribute (a);
     bool still_valid = true;
 
-    if (type == 'a') {     // The feature is an attribute.
-      attr_class* attrib = (attr_class*)c->copy_Feature();
-      if (sym_tab->lookup(attrib->get_type_decl())) {
-        // Then, if initialization expression is okay return true, else false.
-        return validate_expression(in_class, c, attrib->get_init_expr(), sym_tab);
+    if (type == 'a') {   // The feature is an attribute.
+      attr_class* attrib = (attr_class*) c->copy_Feature();
+      Symbol feature_decl_type = attrib->get_type_decl();
+      Symbol init_expr_type = get_expression_type(in_class, attrib->get_init_expr(), sym_tab);
+      if (init_expr_type == No_type) {
+        still_valid = sym_tab->lookup(feature_decl_type);
+      } else if (sym_tab->lookup(feature_decl_type) && sym_tab->lookup(init_expr_type)) {
+          if (feature_decl_type != init_expr_type) {
+            // We know that init_expr_type will have been converted to the class name
+            // by get_expression_type(..).
+            if (feature_decl_type != SELF_TYPE) {
+              still_valid = false;
+            }
+        }
+        still_valid = still_valid && validate_expression(in_class, c, attrib->get_init_expr(), sym_tab);
       } else {
-        return false;
+        still_valid = false;
       }
 
     } else if (type == 'm') { // The feature is an method.

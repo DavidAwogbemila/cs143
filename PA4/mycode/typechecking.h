@@ -1,3 +1,4 @@
+#pragma once
 #include <stack>
 
 #include "cool-tree.h"
@@ -35,11 +36,29 @@ extern Symbol
   val;
 
 
+
 namespace mycode {
 
   Symbol evaluate_lub_of_types(Symbol s1, Symbol s2, SymbolTable<Symbol, symbol_table_data>*& sym_tab);
   Symbol get_cases_lub(Cases cs, SymbolTable<Symbol, symbol_table_data>*& sym_tab);
 
+Feature get_method_from_ancestry(Symbol feature_name, Symbol class_name, SymbolTable<Symbol, symbol_table_data>*& sym_tab) {
+  auto data = sym_tab->lookup(class_name);
+  if (data) {
+    Features fs = data->features;
+    if (fs == NULL) {
+      return NULL;
+    }
+    for (int i = fs->first(); fs->more(i); i = fs->next(i)) {
+      Feature f = fs->nth(i);
+      if (f->get_type() == 'm' && f->get_name() == feature_name) {
+        return f;
+      }
+    }
+    return get_method_from_ancestry(feature_name, data->parent, sym_tab);
+  }
+  return NULL;
+}
 
 Symbol find_type_of_attribute_in_ancestry(Symbol feature_name, Symbol class_name, SymbolTable<Symbol, symbol_table_data>*&sym_tab) {
   // DEBUG_ACTION(std::cout << "looking for " << feature_name << " in class " << class_name << std::endl);
@@ -104,10 +123,10 @@ Symbol get_expression_type(Class_ c, Expression e, SymbolTable<Symbol, symbol_ta
   switch (e->get_expr_type()) {
     case expr_type::EXP_ASSIGN: {
       assign_class* assign_exp = (assign_class*) e;
-      if (sym_tab->lookup(assign_exp->get_name())) {
-        auto s =  sym_tab->lookup(assign_exp->get_name())->get_type();
+      if (symbol_table_data* assign_type = sym_tab->lookup(assign_exp->get_name())) {
+        return assign_type->get_type();
       } else if (Symbol attr_type = find_type_of_attribute_in_ancestry(assign_exp->get_name(), c->get_name(), sym_tab)) {
-        return attr_type;
+        return attr_type == SELF_TYPE ? c->get_name() : attr_type;
       }
       return NULL;
     }
@@ -124,7 +143,7 @@ Symbol get_expression_type(Class_ c, Expression e, SymbolTable<Symbol, symbol_ta
           Feature f = type_features->nth(i);
           if (f->get_name() == static_dispatch_exp->get_name()) {
             if (f->get_type() == 'a') { return NULL; } // not a method, can't be used for dispatch.
-            return f->get_return_type();
+            return f->get_return_type() == SELF_TYPE ? c->get_name() : f->get_return_type();
           }
         }
         return NULL;
@@ -136,15 +155,10 @@ Symbol get_expression_type(Class_ c, Expression e, SymbolTable<Symbol, symbol_ta
       Symbol expr_type = get_expression_type(c, dispatch_exp->get_expr(), sym_tab);
       if (expr_type == NULL) {
         return NULL;
-      }
-      else if (expr_type == SELF_TYPE) {
+      } else if (expr_type == SELF_TYPE) {
         expr_type = c->get_name();
       }
-      if (expr_type && sym_tab->lookup(expr_type)) {
-        symbol_table_data* data = sym_tab->lookup(expr_type);
-        if (!data) {
-          return NULL;
-        }
+      if (symbol_table_data* data = sym_tab->lookup(expr_type)) {
         Features type_features = data->features;
         for (int i = type_features->first(); type_features->more(i); i = type_features->next(i)) {
           Feature f = type_features->nth(i);
@@ -154,6 +168,9 @@ Symbol get_expression_type(Class_ c, Expression e, SymbolTable<Symbol, symbol_ta
             }
             return f->get_return_type() == SELF_TYPE ? c->get_name() : f->get_return_type();
           }
+        }
+        if (Feature f = get_method_from_ancestry(dispatch_exp->get_name(), c->get_name(), sym_tab)) {
+          return f->get_return_type();
         }
         return NULL;
       }
@@ -165,14 +182,16 @@ Symbol get_expression_type(Class_ c, Expression e, SymbolTable<Symbol, symbol_ta
       Symbol else_type = get_expression_type(c, cond_exp->get_else_exp(), sym_tab);
       if (!(then_type && else_type)) { return NULL; }
 
-      return evaluate_lub_of_types(then_type, else_type, sym_tab);
+      Symbol lub = evaluate_lub_of_types(then_type, else_type, sym_tab);
+      return lub == SELF_TYPE ? c->get_name() : lub;
     }
     case expr_type::EXP_LOOP: {
       return Object;
     }
     case expr_type::EXP_TYPCASE: {
       typcase_class* typcase_exp = (typcase_class*) e;
-      return get_cases_lub(typcase_exp->get_cases(), sym_tab);
+      Symbol lub = get_cases_lub(typcase_exp->get_cases(), sym_tab);
+      return lub == SELF_TYPE ? c->get_name() : lub;
     }
     case expr_type::EXP_BLOCK: {
       block_class* block_exp = (block_class*) e;
@@ -226,7 +245,8 @@ Symbol get_expression_type(Class_ c, Expression e, SymbolTable<Symbol, symbol_ta
     }
     case expr_type::EXP_NEW_: {
       new__class* new__exp = (new__class*) e;
-      return new__exp->get_type_name();
+      Symbol new_type_name = new__exp->get_type_name();
+      return new_type_name == SELF_TYPE ? c->get_name() : new_type_name;
     }
     case expr_type::EXP_ISVOID: {
       return Bool;
@@ -237,9 +257,10 @@ Symbol get_expression_type(Class_ c, Expression e, SymbolTable<Symbol, symbol_ta
     case expr_type::EXP_OBJECT: {
       object_class* object_exp = (object_class*) e->copy_Expression();
       if (sym_tab->lookup(object_exp->get_name())) {
-        return sym_tab->lookup(object_exp->get_name())->get_type();
+        Symbol object_type =  sym_tab->lookup(object_exp->get_name())->get_type();
+        return object_type == SELF_TYPE ? c->get_name() : object_type;
       } else if (Symbol type_from_ancestor = find_type_of_attribute_in_ancestry(object_exp->get_name(), c->get_name(), sym_tab)) {
-        return type_from_ancestor;
+        return type_from_ancestor == SELF_TYPE ? c->get_name() : type_from_ancestor;
       }
       return NULL;
     }

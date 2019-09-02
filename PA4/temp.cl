@@ -3,13 +3,13 @@ class A inherits C {
   my_func_1(): A { 
     {
       self;
-      let var1: Int <- true, var2: Int <- 0 in var2 + var1;
+      let var1: Int <- 0, var2: Int <- 0 in var2 + var1;
       var <- (new B);
       if true then (new IO).in_string() else 9 fi;
       case 9 of
-        a: B => var <- (new B);
-        b: Int => (new Int) + 9;
-        c: SELF_TYPE => self.my_func_1();
+        a: A => (new A);
+        b: A => (new A);
+        c: A => (new A);
       esac;
     }
   };
@@ -18,9 +18,9 @@ class A inherits C {
 
 
 class B inherits A {
-  my_b_func(): C { var.my_b_func() };
-  my_func_1(): String { my_func_2() };
-  my_int_1: Int <- { my_int_1@Object.abort(); };
+  my_b_func(): B { var.my_b_func() };
+  my_func_1(): A { my_func_2() };
+  my_int_1: Int <- { my_test_func(); };
 };
 
 

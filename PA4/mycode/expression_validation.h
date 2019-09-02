@@ -1,4 +1,3 @@
-
 #include "cool-tree.h"
 #include "symtab.h"
 
@@ -211,25 +210,6 @@ bool validate_exp_static_dispatch(Class_ in_class, Feature in_feature, Expressio
   DEBUG_ACTION(std::cout << "STATIC DISPATCH VALIDATION!" <<std::endl);
   return still_valid;
 }
-
-Feature get_method_from_ancestry(Symbol feature_name, Symbol class_name, SymbolTable<Symbol, symbol_table_data>*& sym_tab) {
-  auto data = sym_tab->lookup(class_name);
-  if (data) {
-    Features fs = data->features;
-    if (fs == NULL) {
-      return NULL;
-    }
-    for (int i = fs->first(); fs->more(i); i = fs->next(i)) {
-      Feature f = fs->nth(i);
-      if (f->get_type() == 'm' && f->get_name() == feature_name) {
-        return f;
-      }
-    }
-    return get_method_from_ancestry(feature_name, data->parent, sym_tab);
-  }
-  return NULL;
-}
-
 bool validate_exp_dispatch(Class_ in_class, Feature in_feature, Expression e, SymbolTable<Symbol, symbol_table_data>* sym_tab) {
   dispatch_class* dispatch_exp = (dispatch_class*) e;
   Expression expr = dispatch_exp->get_expr();
@@ -237,16 +217,13 @@ bool validate_exp_dispatch(Class_ in_class, Feature in_feature, Expression e, Sy
   Expressions args = dispatch_exp->get_args();
   
   bool still_valid = validate_expression(in_class, in_feature, expr, sym_tab);
-  // DEBUG_ACTION(std::cout << "before getting expression type" << std::endl);
   Symbol expr_type = get_expression_type(in_class, expr, sym_tab);
-  // DEBUG_ACTION(std::cout << "expr_type: " << expr_type << std::endl);
   
   if (expr_type == SELF_TYPE) {
     expr_type = in_class->get_name();
   }
   
   if (!find_type_of_method_in_ancestry(func_name, expr_type, sym_tab)) {
-    // DEBUG_ACTION(std::cout << "no sir,no such [" << func_name << "] in " << expr_type << std::endl);
     still_valid = false;
   } else {
     auto data = sym_tab->lookup(expr_type);
@@ -267,7 +244,6 @@ bool validate_exp_dispatch(Class_ in_class, Feature in_feature, Expression e, Sy
       desired_method = (method_class*) get_method_from_ancestry(func_name, expr_type, sym_tab);
     }
     if (desired_method == NULL) {
-      DEBUG_ACTION(std::cout << " Nah bro we did not find your method." << std::endl);
       return false;
     }
     Formals desired_formals = desired_method->get_formals(); //Ha! now it's formals vs arguments.
@@ -280,8 +256,6 @@ bool validate_exp_dispatch(Class_ in_class, Feature in_feature, Expression e, Sy
                 && still_valid;
     }
   }
-  // DEBUG_ACTION(std::cout << "Dispatch still valid: " << still_valid << std::endl);
-
   return still_valid;
 }
 bool validate_exp_cond(Class_ in_class, Feature in_feature, Expression e, SymbolTable<Symbol, symbol_table_data>* sym_tab) {
@@ -335,26 +309,22 @@ bool validate_case(Class_ in_class, Feature in_feature, Case c, SymbolTable<Symb
   sym_tab->addid(branch_id, data);
   
   still_valid = validate_expression(in_class, in_feature, branch_expression, sym_tab);
-  DEBUG_ACTION(std::cout << "(before)case validation branch <" << branch_id << "> says still_valid:" << still_valid << std::endl);
   Symbol s = get_expression_type(in_class, branch_expression, sym_tab);
   still_valid = still_valid && branch_type == s;
-  if (s && !still_valid) {
-    DEBUG_ACTION(std::cout << "We feel that " << branch_type << " is not the same as " << s << std::endl);
-  }
-  DEBUG_ACTION(std::cout << "(after) case validation branch <" << branch_id << "> says still_valid:" << still_valid << std::endl);
-  
+
   sym_tab->exitscope();
   return still_valid;
 }
 bool validate_exp_block(Class_ in_class, Feature in_feature, Expression e, SymbolTable<Symbol, symbol_table_data>* sym_tab) {
   block_class* block_exp = (block_class*) e;
   Expressions expressions = block_exp->get_expressions();
+  
   bool still_valid = true;
+  
   for (int i = expressions->first(); expressions->more(i); i = expressions->next(i)) {
     still_valid = validate_expression(in_class, in_feature, expressions->nth(i), sym_tab) && still_valid;
   }
 
-  DEBUG_ACTION(std::cout << "Block still valid: " << still_valid << std::endl);
   return still_valid;
 }
 bool validate_exp_let(Class_ in_class, Feature in_feature, Expression e, SymbolTable<Symbol, symbol_table_data>* sym_tab) {
@@ -365,65 +335,110 @@ bool validate_exp_let(Class_ in_class, Feature in_feature, Expression e, SymbolT
   Expression body = let_exp->get_body();
 
   bool still_valid = sym_tab->lookup(type_decl) != NULL ? true: false;
+  still_valid = still_valid && type_decl == get_expression_type(in_class, init_expr, sym_tab);
+
   symbol_table_data* data = new symbol_table_data({NULL, NULL, type_decl, NULL});
-  
   sym_tab->enterscope();
   sym_tab->addid(id, data);
+  
   still_valid = validate_expression(in_class, in_feature, body, sym_tab) && still_valid;
+  
   sym_tab->exitscope();
   return still_valid;
   /* TODO: Typechecking! */
 }
 bool validate_exp_plus(Class_ in_class, Feature in_feature, Expression e, SymbolTable<Symbol, symbol_table_data>* sym_tab) {
   plus_class* plus_exp = (plus_class*) e;
-  return validate_expression(in_class, in_feature, plus_exp->get_first_expression(), sym_tab) && \
+  bool still_valid =  validate_expression(in_class, in_feature, plus_exp->get_first_expression(), sym_tab) && \
          validate_expression(in_class, in_feature, plus_exp->get_second_expression(), sym_tab);
-  /* TODO: Typechecking! */
+
+  still_valid = still_valid && \
+                Int == get_expression_type(in_class, plus_exp->get_first_expression(), sym_tab) && \
+                Int == get_expression_type(in_class, plus_exp->get_second_expression(), sym_tab);
+  return still_valid;
 }
 bool validate_exp_sub(Class_ in_class, Feature in_feature, Expression e, SymbolTable<Symbol, symbol_table_data>* sym_tab) {
   sub_class* sub_exp = (sub_class*) e;
-  return validate_expression(in_class, in_feature, sub_exp->get_first_expression(), sym_tab) && \
+  bool still_valid = validate_expression(in_class, in_feature, sub_exp->get_first_expression(), sym_tab) && \
          validate_expression(in_class, in_feature, sub_exp->get_second_expression(), sym_tab);
-  /* TODO: Typechecking! */
+  
+  still_valid = still_valid && \
+                Int == get_expression_type(in_class, sub_exp->get_first_expression(), sym_tab) && \
+                Int == get_expression_type(in_class, sub_exp->get_second_expression(), sym_tab);
+  return still_valid;
 }
 bool validate_exp_mul(Class_ in_class, Feature in_feature, Expression e, SymbolTable<Symbol, symbol_table_data>* sym_tab) {
   mul_class* mul_exp = (mul_class*) e;
-  return validate_expression(in_class, in_feature, mul_exp->get_first_expression(), sym_tab) && \
+  bool still_valid =  validate_expression(in_class, in_feature, mul_exp->get_first_expression(), sym_tab) && \
          validate_expression(in_class, in_feature, mul_exp->get_second_expression(), sym_tab);
-  /* TODO: Typechecking! */
+  
+  still_valid = still_valid && \
+                Int == get_expression_type(in_class, mul_exp->get_first_expression(), sym_tab) && \
+                Int == get_expression_type(in_class, mul_exp->get_second_expression(), sym_tab);
+  return still_valid;
 }
 bool validate_exp_divide(Class_ in_class, Feature in_feature, Expression e, SymbolTable<Symbol, symbol_table_data>* sym_tab) {
   divide_class* divide_exp = (divide_class*) e;
-  return validate_expression(in_class, in_feature, divide_exp->get_first_expression(), sym_tab) && \
+  bool still_valid = validate_expression(in_class, in_feature, divide_exp->get_first_expression(), sym_tab) && \
          validate_expression(in_class, in_feature, divide_exp->get_second_expression(), sym_tab);
-  /* TODO: Typechecking! */
+  
+  still_valid = still_valid && \
+                Int == get_expression_type(in_class, divide_exp->get_first_expression(), sym_tab) && \
+                Int == get_expression_type(in_class, divide_exp->get_second_expression(), sym_tab);
+  return still_valid;
 }
 bool validate_exp_neg(Class_ in_class, Feature in_feature, Expression e, SymbolTable<Symbol, symbol_table_data>* sym_tab) {
   neg_class* neg_exp = (neg_class*) e;
-  return validate_expression(in_class, in_feature, neg_exp->get_expr(), sym_tab);
-  /* TODO: Typechecking */
+  bool still_valid =  validate_expression(in_class, in_feature, neg_exp->get_expr(), sym_tab);
+
+  still_valid = still_valid && Bool == get_expression_type(in_class, neg_exp->get_expr(), sym_tab);
+  
+  return still_valid;
 }
 bool validate_exp_lt(Class_ in_class, Feature in_feature, Expression e, SymbolTable<Symbol, symbol_table_data>* sym_tab) {
   lt_class* lt_exp = (lt_class*) e;
-  return validate_expression(in_class, in_feature, lt_exp->get_first_expression(), sym_tab) && \
+  bool still_valid =  validate_expression(in_class, in_feature, lt_exp->get_first_expression(), sym_tab) && \
          validate_expression(in_class, in_feature, lt_exp->get_second_expression(), sym_tab);
-  /* TODO: Typechecking! */
+
+  still_valid = Int == get_expression_type(in_class, lt_exp->get_first_expression(), sym_tab) && \
+                Int == get_expression_type(in_class, lt_exp->get_second_expression(), sym_tab);
+  
+  return still_valid;
 }
 bool validate_exp_eq(Class_ in_class, Feature in_feature, Expression e, SymbolTable<Symbol, symbol_table_data>* sym_tab) {
   eq_class* eq_exp = (eq_class*) e;
-  return validate_expression(in_class, in_feature, eq_exp->get_first_expression(), sym_tab) && \
+  bool still_valid = validate_expression(in_class, in_feature, eq_exp->get_first_expression(), sym_tab) && \
          validate_expression(in_class, in_feature, eq_exp->get_second_expression(), sym_tab);
-  /* TODO: Typechecking! */
+
+  Symbol type_1 = get_expression_type(in_class, eq_exp->get_first_expression(), sym_tab);
+  Symbol type_2 = get_expression_type(in_class, eq_exp->get_second_expression(), sym_tab);
+
+  if (type_1 != type_2) {
+    still_valid = still_valid &&
+                  type_1 != Bool && type_2 != Bool &&
+                  type_1 != Int && type_2 != Int &&
+                  type_1 != Str && type_2 != Str;
+  }
+
+  return still_valid;
 }
 bool validate_exp_leq(Class_ in_class, Feature in_feature, Expression e, SymbolTable<Symbol, symbol_table_data>* sym_tab) {
   leq_class* leq_exp = (leq_class*) e;
-  return validate_expression(in_class, in_feature, leq_exp->get_first_expression(), sym_tab) && \
+  bool still_valid =  validate_expression(in_class, in_feature, leq_exp->get_first_expression(), sym_tab) && \
          validate_expression(in_class, in_feature, leq_exp->get_second_expression(), sym_tab);
-  /* TODO: Typechecking! */
+
+  still_valid = Int == get_expression_type(in_class, leq_exp->get_first_expression(), sym_tab) && \
+                Int == get_expression_type(in_class, leq_exp->get_second_expression(), sym_tab);
+  
+  return still_valid;
 }
 bool validate_exp_comp(Class_ in_class, Feature in_feature, Expression e, SymbolTable<Symbol, symbol_table_data>* sym_tab) {
   comp_class* comp_exp = (comp_class*) e;
-  return validate_expression(in_class, in_feature, comp_exp->get_expression(), sym_tab);
+  bool still_valid =  validate_expression(in_class, in_feature, comp_exp->get_expression(), sym_tab);
+
+  still_valid = still_valid && Int == get_expression_type(in_class, comp_exp->get_expression(), sym_tab);
+
+  return still_valid;
 }
 bool validate_exp_int_const(Class_ in_class, Feature in_feature, Expression e, SymbolTable<Symbol, symbol_table_data>* sym_tab) { 
   return true;
