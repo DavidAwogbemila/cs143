@@ -1,5 +1,4 @@
 
-
 #include <stdlib.h>
 #include <stdio.h>
 #include <stdarg.h>
@@ -98,7 +97,7 @@ namespace mycode {
     sym_tab->enterscope();
 
     for (Class_ c: classes_list) {
-      class__class* c_info = (class__class*)c->copy_Class_();
+      class__class* c_info = (class__class*)c;
       symbol_table_data* data = new symbol_table_data;
       data->features = c_info->get_features();
       data->parent = c_info->get_parent_name();
@@ -112,7 +111,6 @@ namespace mycode {
 
 ClassTable::ClassTable(Classes classes) : semant_errors(0) , error_stream(cerr) {
 
-  /* Fill this in */
   install_basic_classes();
   Class_ faulty_class = NULL;
   std::vector<Class_> user_classes_list;
@@ -132,24 +130,6 @@ ClassTable::ClassTable(Classes classes) : semant_errors(0) , error_stream(cerr) 
     exit(1);
   }
 
-  SymbolTable<Symbol, mycode::symbol_table_data>* symbol_table
-    (new SymbolTable<Symbol, mycode::symbol_table_data>);
-
-  mycode::initialize_symbol_table_with_globals(classes_list, symbol_table);
-  
-  for (Class_ c : user_classes_list) {
-    DEBUG_ACTION(std::cout << "Validating class " << ((class__class*)c->copy_Class_())->get_name() << std::endl);
-    if (mycode::validate_class(c, symbol_table) ) {
-      DEBUG_ACTION(std::cout << "Class " 
-                             << ((class__class*)c->copy_Class_())->get_name()
-                             << " was okay!"
-                             << std::endl);
-      
-    } else {
-      DEBUG_ACTION(std::cout << "Error! while validating class " << ((class__class*)c->copy_Class_())->get_name() << std::endl);
-      semant_error(c);
-    }
-  }
 }
 
 void ClassTable::install_basic_classes() {
@@ -317,6 +297,19 @@ void program_class::semant()
   ClassTable *classtable = new ClassTable(classes);
 
   /* some semantic analysis code may go here */
+
+  SymbolTable<Symbol, mycode::symbol_table_data>* symbol_table(new SymbolTable<Symbol, mycode::symbol_table_data>);
+
+  mycode::initialize_symbol_table_with_globals(classes_list, symbol_table);
+  for (int i = 0; classes->more(i); i = classes->next(i)) {
+    Class_ c = classes->nth(i);
+    if (mycode::validate_class(c, symbol_table) ) {
+      
+    } else {
+      DEBUG_ACTION(std::cout << "Error! while validating class " << ((class__class*)c->copy_Class_())->get_name() << std::endl);
+      classtable->semant_error(c);
+    }
+  }
 
   if (classtable->errors()) {
   	cerr << "Compilation halted due to static semantic errors." << endl;

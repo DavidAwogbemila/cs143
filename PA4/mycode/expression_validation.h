@@ -1,3 +1,5 @@
+#pragma once
+
 #include "cool-tree.h"
 #include "symtab.h"
 
@@ -35,99 +37,142 @@ bool validate_exp_no_expr(Class_ in_class, Feature in_feature, Expression e, Sym
 bool validate_exp_object(Class_ in_class, Feature in_feature, Expression e, SymbolTable<Symbol, symbol_table_data>* sym_tab);
 bool validate_case(Class_ in_class, Feature in_feature, Case e, SymbolTable<Symbol, symbol_table_data>* sym_tab);
 
-bool validate_expression(Class_ in_class, Feature in_feature, Expression e, SymbolTable<Symbol, symbol_table_data>*& sym_tab) {
-  DEBUG_ACTION(std::cout << (int)e->get_expr_type() << std::endl);
+bool validate_expression(Class_ in_class, Feature in_feature, Expression& e, SymbolTable<Symbol, symbol_table_data>*& sym_tab) {
+  DEBUG_ACTION(std::cout << "Expression class(#) is: " << (int)e->get_expr_type() << std::endl);
+  bool expression_is_valid = true;
   switch (e->get_expr_type()) {
     case expr_type::EXP_ASSIGN: {
       assign_class* assign_exp = (assign_class*) e;
-      return validate_exp_assign(in_class, in_feature, assign_exp, sym_tab);
+      expression_is_valid = validate_exp_assign(in_class, in_feature, assign_exp, sym_tab);
+      break;
     }
     case expr_type::EXP_STATIC_DISPATCH: {
       static_dispatch_class* static_dispatch_exp = (static_dispatch_class*) e;
-      return validate_exp_static_dispatch(in_class, in_feature, static_dispatch_exp, sym_tab);
+      expression_is_valid = validate_exp_static_dispatch(in_class, in_feature, static_dispatch_exp, sym_tab);
+      break;
     }
     case expr_type::EXP_DISPATCH: {
       dispatch_class* dispatch_exp = (dispatch_class*) e;
-      return validate_exp_dispatch(in_class, in_feature, dispatch_exp, sym_tab);
+      expression_is_valid = validate_exp_dispatch(in_class, in_feature, dispatch_exp, sym_tab);
+      break;
     }
     case expr_type::EXP_COND: {
       cond_class* cond_exp = (cond_class*) e;
-      return validate_exp_cond(in_class, in_feature, cond_exp, sym_tab);
+      expression_is_valid = validate_exp_cond(in_class, in_feature, cond_exp, sym_tab);
+      break;
     }
     case expr_type::EXP_LOOP: {
       loop_class* loop_exp = (loop_class*) e;
-      return validate_exp_loop(in_class, in_feature, loop_exp, sym_tab);
+      expression_is_valid = validate_exp_loop(in_class, in_feature, loop_exp, sym_tab);
+      break;
     }
     case expr_type::EXP_TYPCASE: {
       typcase_class* typcase_exp = (typcase_class*) e;
-      return validate_exp_typcase(in_class, in_feature, typcase_exp, sym_tab);
+      expression_is_valid = validate_exp_typcase(in_class, in_feature, typcase_exp, sym_tab);
+      break;
     }
     case expr_type::EXP_BLOCK: {
       block_class* block_exp = (block_class*) e;
-      return validate_exp_block(in_class, in_feature, block_exp, sym_tab);
+      expression_is_valid = validate_exp_block(in_class, in_feature, block_exp, sym_tab);
+      break;
     }
     case expr_type::EXP_LET: {
       let_class* let_exp = (let_class*) e;
-      return validate_exp_let(in_class, in_feature, let_exp, sym_tab);
+      expression_is_valid = validate_exp_let(in_class, in_feature, let_exp, sym_tab);
+      break;
     }
     case expr_type::EXP_PLUS: {
       plus_class* plus_exp = (plus_class*) e;
-      return validate_exp_plus(in_class, in_feature, plus_exp, sym_tab);
+      expression_is_valid = validate_exp_plus(in_class, in_feature, plus_exp, sym_tab);
+      break;
     }
     case expr_type::EXP_SUB: {
       sub_class* sub_exp = (sub_class*) e;
-      return validate_exp_sub(in_class, in_feature, sub_exp, sym_tab);
+      expression_is_valid = validate_exp_sub(in_class, in_feature, sub_exp, sym_tab);
+      break;
     }
     case expr_type::EXP_MUL: {
       mul_class* mul_exp = (mul_class*) e;
-      return validate_exp_mul(in_class, in_feature, mul_exp, sym_tab);
+      expression_is_valid = validate_exp_mul(in_class, in_feature, mul_exp, sym_tab);
+      break;
     }
     case expr_type::EXP_DIVIDE: {
       divide_class* divide_exp = (divide_class*) e;
-      return validate_exp_divide(in_class, in_feature, divide_exp, sym_tab);
+      expression_is_valid = validate_exp_divide(in_class, in_feature, divide_exp, sym_tab);
+      break;
     }
     case expr_type::EXP_NEG: {
       neg_class* neg_exp = (neg_class*) e;
-      return validate_exp_neg(in_class, in_feature, neg_exp, sym_tab);
+      expression_is_valid = validate_exp_neg(in_class, in_feature, neg_exp, sym_tab);
+      break;
     }
     case expr_type::EXP_LT: {
       lt_class* lt_exp = (lt_class*) e;
-      return validate_exp_lt(in_class, in_feature, lt_exp, sym_tab);
+      expression_is_valid = validate_exp_lt(in_class, in_feature, lt_exp, sym_tab);
+      break;
     }
     case expr_type::EXP_EQ: {
       eq_class* eq_exp = (eq_class*) e;
-      return validate_exp_eq(in_class, in_feature, eq_exp, sym_tab);
+      expression_is_valid = validate_exp_eq(in_class, in_feature, eq_exp, sym_tab);
+      break;
     }
     case expr_type::EXP_LEQ: {
       leq_class* leq_exp = (leq_class*) e;
-      return validate_exp_leq(in_class, in_feature, leq_exp, sym_tab);
+      expression_is_valid = validate_exp_leq(in_class, in_feature, leq_exp, sym_tab);
+      break;
     }
     case expr_type::EXP_COMP: {
       comp_class* comp_exp = (comp_class*) e;
-      return validate_exp_comp(in_class, in_feature, comp_exp, sym_tab);
+      expression_is_valid = validate_exp_comp(in_class, in_feature, comp_exp, sym_tab);
+      break;
     }
-    case expr_type::EXP_INT_CONST: { return true; }
-    case expr_type::EXP_BOOL_CONST: { return true; }
-    case expr_type::EXP_STRING_CONST: { return true; }
+    case expr_type::EXP_INT_CONST: {
+      DEBUG_ACTION(std::cout << "Expression type: INT_CONST" << std::endl );
+      expression_is_valid = true;
+      break;
+    }
+    case expr_type::EXP_BOOL_CONST: { 
+      expression_is_valid = true;
+      break;
+    }
+    case expr_type::EXP_STRING_CONST: { 
+      expression_is_valid = true;
+      break;
+    }
     case expr_type::EXP_NEW_: {
       new__class* new__exp = (new__class*) e;
-      return validate_exp_new_(in_class, in_feature, new__exp, sym_tab);
+      expression_is_valid = validate_exp_new_(in_class, in_feature, new__exp, sym_tab);
+      break;
     }
     case expr_type::EXP_ISVOID: {
       isvoid_class* isvoid_exp = (isvoid_class*) e;
-      return validate_exp_isvoid(in_class, in_feature, isvoid_exp, sym_tab);
+      DEBUG_ACTION(std::cout << "Expression type: ISVOID" << std::endl );
+      expression_is_valid = validate_exp_isvoid(in_class, in_feature, isvoid_exp, sym_tab);
+      break;
     }
-    case expr_type::EXP_NO_EXPR: { return true; }
+    case expr_type::EXP_NO_EXPR: { 
+      expression_is_valid = true;
+      break;
+    }
     case expr_type::EXP_OBJECT: {
       object_class* object_exp = (object_class*) e->copy_Expression();
-      return validate_exp_object(in_class, in_feature, object_exp, sym_tab);
+      expression_is_valid = validate_exp_object(in_class, in_feature, object_exp, sym_tab);
+      break;
     }
     defualt: { 
       DEBUG_ACTION(std::cout << "Default VALIDATION!" <<std::endl);
-      return false;
+      expression_is_valid = false;
     }
   }
-  return false;
+  if (Symbol expr_type = get_expression_type(in_class, e, sym_tab)) {
+    e->type = expr_type;
+    //e->set_type(idtable.add_string(expr_type->get_string()));
+    DEBUG_ACTION(std::cout << "Expression type set to " << expr_type << std::endl);
+  } else {
+    e->set_type(idtable.add_string(Object->get_string()));
+    DEBUG_ACTION(std::cout << "couldn't find expression type so setting to: " << Object->get_string() << std::endl);
+  }
+  return expression_is_valid;
 }
 
 bool validate_exp_assign(Class_ in_class, Feature in_feature, Expression e, SymbolTable<Symbol, symbol_table_data>* sym_tab) {
@@ -202,7 +247,8 @@ bool validate_exp_static_dispatch(Class_ in_class, Feature in_feature, Expressio
       return false;
     }
     for (int i = args->first(); args->more(i); i = args->next(i)) {
-      still_valid =  validate_expression(in_class, in_feature, args->nth(i), sym_tab) \
+      Expression nth_exp = args->nth(i);
+      still_valid =  validate_expression(in_class, in_feature, nth_exp, sym_tab) \
                 && desired_formals->nth(i)->get_type() == get_expression_type(in_class, args->nth(i), sym_tab) \
                 && still_valid;
     }
@@ -251,7 +297,8 @@ bool validate_exp_dispatch(Class_ in_class, Feature in_feature, Expression e, Sy
       return false;
     }
     for (int i = args->first(); args->more(i); i = args->next(i)) {
-      still_valid =  validate_expression(in_class, in_feature, args->nth(i), sym_tab) \
+      Expression nth_exp = args->nth(i);
+      still_valid =  validate_expression(in_class, in_feature, nth_exp, sym_tab) \
                 && desired_formals->nth(i)->get_type() == get_expression_type(in_class, args->nth(i), sym_tab) \
                 && still_valid;
     }
@@ -322,7 +369,8 @@ bool validate_exp_block(Class_ in_class, Feature in_feature, Expression e, Symbo
   bool still_valid = true;
   
   for (int i = expressions->first(); expressions->more(i); i = expressions->next(i)) {
-    still_valid = validate_expression(in_class, in_feature, expressions->nth(i), sym_tab) && still_valid;
+    Expression nth_exp = expressions->nth(i);
+    still_valid = validate_expression(in_class, in_feature, nth_exp, sym_tab) && still_valid;
   }
 
   return still_valid;

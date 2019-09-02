@@ -5,5 +5,5 @@ class A {
 
 class B inherits A {
   i: Int <- x <- j;
-  j: Int <- "a string";
+  j: Int <- 5000 + 50000;
 };

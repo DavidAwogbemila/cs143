@@ -25,15 +25,17 @@ namespace mycode {
   }
 
   bool validate_feature(const Class_ in_class, Feature c, SymbolTable<Symbol, symbol_table_data>*& sym_tab) {
-    char type = c->get_type(); // whether method (m) or attribute (a);
+    char feature_type = c->get_type(); // whether method (m) or attribute (a);
     bool still_valid = true;
 
-    if (type == 'a') {   // The feature is an attribute.
-      attr_class* attrib = (attr_class*) c->copy_Feature();
+    if (feature_type == 'a') {   // The feature is an attribute.
+      attr_class* attrib = (attr_class*) c;
       Symbol feature_decl_type = attrib->get_type_decl();
       Symbol init_expr_type = get_expression_type(in_class, attrib->get_init_expr(), sym_tab);
+      auto exp = attrib->get_init_expr();
       if (init_expr_type == No_type) {
         still_valid = sym_tab->lookup(feature_decl_type);
+        attrib->get_init_expr()->set_type(idtable.add_string(No_type->get_string()));
       } else if (sym_tab->lookup(feature_decl_type) && sym_tab->lookup(init_expr_type)) {
           if (feature_decl_type != init_expr_type) {
             // We know that init_expr_type will have been converted to the class name
@@ -42,16 +44,22 @@ namespace mycode {
               still_valid = false;
             }
         }
+        if (exp->get_type() == NULL) {
+          DEBUG_ACTION(std::cout << "Before attr validation expr's type is NULL." << std::endl);
+        }
         still_valid = still_valid && validate_expression(in_class, c, attrib->get_init_expr(), sym_tab);
+        DEBUG_ACTION(std::cout << "After attr validation expr's type is " << exp->get_type() << std::endl);
       } else {
         still_valid = false;
       }
 
-    } else if (type == 'm') { // The feature is an method.
-      method_class* method = (method_class*)c->copy_Feature();
-      if (sym_tab->lookup(method->get_return_type())) {
+    } else if (feature_type == 'm') { // The feature is an method.
+      method_class* method = (method_class*)c;
+      Symbol method_decl_return_type = method->get_return_type(), method_expr_return_type;
+      if (sym_tab->lookup(method_decl_return_type)) {
         // Then, if initialization expression is okay return true, else false.
         Formals method_formals = method->get_formals();
+        sym_tab->enterscope();
         for (int i = method_formals->first(); method_formals->more(i); i = method_formals->next(i)) {
           if (!sym_tab->lookup(method_formals->nth(i)->get_type())) {
             /* If any parameter type is bad, return false. */
@@ -60,9 +68,16 @@ namespace mycode {
           symbol_table_data* data = new symbol_table_data({NULL, NULL, method_formals->nth(i)->get_type(), NULL});
           sym_tab->addid(method_formals->nth(i)->get_name(), data);
         }
-        DEBUG_ACTION(std::cout << "NOW VALIDATING FUNC");
-        // sym_tab->dump();
-        still_valid = validate_expression(in_class, c, method->get_expr(), sym_tab);
+        still_valid = validate_expression(in_class, c, method->get_expr(), sym_tab) && still_valid;
+        method_expr_return_type = get_expression_type(in_class, method->get_expr(), sym_tab);
+        if (method_expr_return_type != method_decl_return_type) {
+          if (method_decl_return_type != SELF_TYPE) {
+            DEBUG_ACTION(std::cout << "*** Bad return type" << std::endl);
+            DEBUG_ACTION(std::cout << "[decl type: " << method_decl_return_type << "] vs [expr type: " << method_expr_return_type << "] " << std::endl);
+            still_valid = false;
+          }
+        }
+        sym_tab->exitscope();
       } else {
         still_valid = false;
       }
@@ -71,8 +86,8 @@ namespace mycode {
     return still_valid;
   }
 
-  bool validate_class(Class_ c, SymbolTable<Symbol, symbol_table_data>*& sym_tab) {
-    class__class* c_info = (class__class*) c->copy_Class_();
+  bool validate_class(Class_& c, SymbolTable<Symbol, symbol_table_data>*& sym_tab) {
+    class__class* c_info = (class__class*) c;
     Features c_features = c_info->get_features();
     bool still_valid = true;
 
@@ -80,7 +95,14 @@ namespace mycode {
     init_feature_set_scope(c, c_features, sym_tab);
 
     for (int i = c_features->first(); c_features->more(i); i = c_features->next(i)) {
-      still_valid = validate_feature(c, c_features->nth(i), sym_tab) && still_valid;
+      DEBUG_ACTION(std::cout << "Validating feature " << c_features->nth(i)->get_name() << std::endl);
+      bool valid = validate_feature(c, c_features->nth(i), sym_tab);
+      if(valid) {
+        DEBUG_ACTION(std::cout << "Feature " << c_features->nth(i)->get_name() << " is okay " << std::endl);
+      } else {
+        DEBUG_ACTION(std::cout << "Feature " << c_features->nth(i)->get_name() << " is not okay " << std::endl);
+        still_valid = false;
+      }
     }
 
     sym_tab->exitscope();

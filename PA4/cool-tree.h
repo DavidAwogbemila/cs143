@@ -175,7 +175,7 @@ public:
 
    Symbol get_name() const { return copy_Symbol(name); }
    Symbol get_parent_name() const { return copy_Symbol(parent); }
-   Features get_features() const { return features->copy_list(); }
+   Features& get_features() { return features; }
 
 #ifdef Class__SHARED_EXTRAS
    Class__SHARED_EXTRAS
@@ -206,7 +206,7 @@ public:
    Symbol get_type_decl() const { return NULL;}
    Symbol get_return_type() const { return copy_Symbol(return_type);}
    Formals get_formals() const { return formals->copy_list();}
-   Expression get_expr() const { return expr->copy_Expression(); }
+   Expression& get_expr() { return expr; }
    virtual char get_type() const override { return 'm'; }
 
 #ifdef Feature_SHARED_EXTRAS
@@ -235,7 +235,7 @@ public:
    Symbol get_return_type() const { return NULL; };
    Symbol get_name() const { return copy_Symbol(name); }
    Symbol get_type_decl() const { return copy_Symbol(type_decl);}
-   Expression get_init_expr() const { return init->copy_Expression();}
+   Expression& get_init_expr() { return init;}
    virtual char get_type() const override { return 'a'; }
 
 #ifdef Feature_SHARED_EXTRAS
@@ -287,7 +287,7 @@ public:
    void dump(ostream& stream, int n);
    Symbol get_name() const { return copy_Symbol(name); }
    Symbol get_type_decl() const { return copy_Symbol(type_decl); }
-   Expression get_expr() const { return expr->copy_Expression(); }
+   Expression& get_expr() { return expr; }
 
 #ifdef Case_SHARED_EXTRAS
    Case_SHARED_EXTRAS
@@ -311,7 +311,7 @@ public:
    Expression copy_Expression();
    void dump(ostream& stream, int n);
    expr_type get_expr_type() { return expr_type::EXP_ASSIGN; }
-   Expression get_expr() const { return expr->copy_Expression(); }
+   Expression& get_expr() { return expr; }
    Symbol get_name() const { return copy_Symbol(name); }
 
 #ifdef Expression_SHARED_EXTRAS
@@ -340,10 +340,10 @@ public:
    Expression copy_Expression();
    void dump(ostream& stream, int n);
    expr_type get_expr_type() { return expr_type::EXP_STATIC_DISPATCH; }
-   Expression get_expr() const { return expr->copy_Expression(); }
+   Expression& get_expr() { return expr; }
    Symbol get_type_name() const { return copy_Symbol(type_name); }
    Symbol get_name() const { return copy_Symbol(name); }
-   Expressions get_args() const { return actual->copy_list(); }
+   Expressions& get_args() { return actual; }
 
 
 #ifdef Expression_SHARED_EXTRAS
@@ -370,9 +370,9 @@ public:
    Expression copy_Expression();
    void dump(ostream& stream, int n);
    expr_type get_expr_type() { return expr_type::EXP_DISPATCH; }
-   Expression get_expr() const { return expr->copy_Expression(); }
+   Expression& get_expr() { return expr; }
    Symbol get_name() const { return copy_Symbol(name); }
-   Expressions get_args() const { return actual->copy_list(); }
+   Expressions& get_args() { return actual; }
 
 
 #ifdef Expression_SHARED_EXTRAS
@@ -399,9 +399,9 @@ public:
    Expression copy_Expression();
    void dump(ostream& stream, int n);
    expr_type get_expr_type() { return expr_type::EXP_COND; }
-   Expression get_pred() const { return pred->copy_Expression(); }
-   Expression get_then_exp() const { return then_exp->copy_Expression(); }
-   Expression get_else_exp() const { return else_exp->copy_Expression(); }
+   Expression& get_pred() { return pred; }
+   Expression& get_then_exp() { return then_exp; }
+   Expression& get_else_exp() { return else_exp; }
 
 #ifdef Expression_SHARED_EXTRAS
    Expression_SHARED_EXTRAS
@@ -425,8 +425,8 @@ public:
    Expression copy_Expression();
    void dump(ostream& stream, int n);
    expr_type get_expr_type() { return expr_type::EXP_LOOP; }
-   Expression get_pred() const { return pred->copy_Expression(); }
-   Expression get_body() const { return body->copy_Expression(); }
+   Expression& get_pred() { return pred; }
+   Expression& get_body() { return body; }
 
 #ifdef Expression_SHARED_EXTRAS
    Expression_SHARED_EXTRAS
@@ -450,7 +450,7 @@ public:
    Expression copy_Expression();
    void dump(ostream& stream, int n);
    expr_type get_expr_type() { return expr_type::EXP_TYPCASE; }
-   Expression get_expr() const { return expr->copy_Expression(); }
+   Expression& get_expr() { return expr; }
    Cases get_cases() const { return cases->copy_list(); }
 
 
@@ -474,7 +474,7 @@ public:
    Expression copy_Expression();
    void dump(ostream& stream, int n);
    expr_type get_expr_type() { return expr_type::EXP_BLOCK; }
-   Expressions get_expressions() const { return body->copy_list(); }
+   Expressions& get_expressions() { return body; }
 
 #ifdef Expression_SHARED_EXTRAS
    Expression_SHARED_EXTRAS
@@ -504,8 +504,8 @@ public:
    expr_type get_expr_type() { return expr_type::EXP_LET; }
    Symbol get_identifier() const { return copy_Symbol(identifier); }
    Symbol get_type_decl() const { return copy_Symbol(type_decl); }
-   Expression get_init_expr() const { return init->copy_Expression(); }
-   Expression get_body() const { return body->copy_Expression(); }
+   Expression& get_init_expr() { return init; }
+   Expression& get_body() { return body; }
 
 #ifdef Expression_SHARED_EXTRAS
    Expression_SHARED_EXTRAS
@@ -529,8 +529,8 @@ public:
    Expression copy_Expression();
    void dump(ostream& stream, int n);
    expr_type get_expr_type() { return expr_type::EXP_PLUS; }
-   Expression get_first_expression() const { return e1->copy_Expression(); }
-   Expression get_second_expression() const { return e2->copy_Expression(); }
+   Expression& get_first_expression() { return e1; }
+   Expression& get_second_expression() { return e2; }
 
 #ifdef Expression_SHARED_EXTRAS
    Expression_SHARED_EXTRAS
@@ -554,8 +554,8 @@ public:
    Expression copy_Expression();
    void dump(ostream& stream, int n);
    expr_type get_expr_type() { return expr_type::EXP_SUB; }
-   Expression get_first_expression() const { return e1->copy_Expression(); }
-   Expression get_second_expression() const { return e2->copy_Expression(); }
+   Expression& get_first_expression() { return e1; }
+   Expression& get_second_expression() { return e2; }
 
 #ifdef Expression_SHARED_EXTRAS
    Expression_SHARED_EXTRAS
@@ -579,8 +579,8 @@ public:
    Expression copy_Expression();
    void dump(ostream& stream, int n);
    expr_type get_expr_type() { return expr_type::EXP_MUL; }
-   Expression get_first_expression() const { return e1->copy_Expression(); }
-   Expression get_second_expression() const { return e2->copy_Expression(); }
+   Expression& get_first_expression() { return e1; }
+   Expression& get_second_expression() { return e2; }
 
 #ifdef Expression_SHARED_EXTRAS
    Expression_SHARED_EXTRAS
@@ -604,8 +604,8 @@ public:
    Expression copy_Expression();
    void dump(ostream& stream, int n);
    expr_type get_expr_type() { return expr_type::EXP_DIVIDE; }
-   Expression get_first_expression() const { return e1->copy_Expression(); }
-   Expression get_second_expression() const { return e2->copy_Expression(); }
+   Expression& get_first_expression() { return e1; }
+   Expression& get_second_expression() { return e2; }
 
 #ifdef Expression_SHARED_EXTRAS
    Expression_SHARED_EXTRAS
@@ -627,7 +627,7 @@ public:
    Expression copy_Expression();
    void dump(ostream& stream, int n);
    expr_type get_expr_type() { return expr_type::EXP_NEG; }
-   Expression get_expr() const { return e1->copy_Expression(); }
+   Expression& get_expr() { return e1; }
 
 #ifdef Expression_SHARED_EXTRAS
    Expression_SHARED_EXTRAS
@@ -651,8 +651,8 @@ public:
    Expression copy_Expression();
    void dump(ostream& stream, int n);
    expr_type get_expr_type() { return expr_type::EXP_LT; }
-   Expression get_first_expression() const { return e1->copy_Expression(); }
-   Expression get_second_expression() const { return e2->copy_Expression(); }
+   Expression& get_first_expression() { return e1; }
+   Expression& get_second_expression() { return e2; }
 
 #ifdef Expression_SHARED_EXTRAS
    Expression_SHARED_EXTRAS
@@ -676,8 +676,8 @@ public:
    Expression copy_Expression();
    void dump(ostream& stream, int n);
    expr_type get_expr_type() { return expr_type::EXP_EQ; }
-   Expression get_first_expression() const { return e1->copy_Expression(); }
-   Expression get_second_expression() const { return e2->copy_Expression(); }
+   Expression& get_first_expression() { return e1; }
+   Expression& get_second_expression() { return e2; }
 
 #ifdef Expression_SHARED_EXTRAS
    Expression_SHARED_EXTRAS
@@ -701,8 +701,8 @@ public:
    Expression copy_Expression();
    void dump(ostream& stream, int n);
    expr_type get_expr_type() { return expr_type::EXP_LEQ; }
-   Expression get_first_expression() const { return e1->copy_Expression(); }
-   Expression get_second_expression() const { return e2->copy_Expression(); }
+   Expression& get_first_expression() { return e1; }
+   Expression& get_second_expression() { return e2; }
 
 #ifdef Expression_SHARED_EXTRAS
    Expression_SHARED_EXTRAS
@@ -724,7 +724,7 @@ public:
    Expression copy_Expression();
    void dump(ostream& stream, int n);
    expr_type get_expr_type() { return expr_type::EXP_COMP; }
-   Expression get_expression() const { return e1->copy_Expression(); }
+   Expression& get_expression() { return e1; }
 
 #ifdef Expression_SHARED_EXTRAS
    Expression_SHARED_EXTRAS
@@ -831,7 +831,7 @@ public:
    Expression copy_Expression();
    void dump(ostream& stream, int n);
    expr_type get_expr_type() { return expr_type::EXP_ISVOID; }
-   Expression get_expr() const { return e1->copy_Expression(); }
+   Expression& get_expr() { return e1; }
 
 #ifdef Expression_SHARED_EXTRAS
    Expression_SHARED_EXTRAS

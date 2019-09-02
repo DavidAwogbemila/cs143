@@ -62,7 +62,10 @@
 			"cerrno": "cpp",
 			"ios": "cpp",
 			"locale": "cpp",
-			"queue": "cpp"
+			"queue": "cpp",
+			"stack": "cpp",
+			"cstring": "cpp",
+			"list": "cpp"
 		},
 		"editor.tabSize": 2,
 		"editor.insertSpaces": true
