@@ -33,22 +33,28 @@ namespace mycode {
       Symbol feature_decl_type = attrib->get_type_decl();
       Symbol init_expr_type = get_expression_type(in_class, attrib->get_init_expr(), sym_tab);
       auto exp = attrib->get_init_expr();
+      attr_class* corresponding_parent_attribute = (attr_class*)get_attribute_from_ancestry(attrib->get_name(), in_class->get_parent_name(), sym_tab);
+      if (corresponding_parent_attribute) {
+        if (corresponding_parent_attribute->get_type_decl() != attrib->get_type_decl()) {
+          still_valid = false;
+        } 
+      }
       if (init_expr_type == No_type) {
-        still_valid = sym_tab->lookup(feature_decl_type);
-        attrib->get_init_expr()->set_type(idtable.add_string(No_type->get_string()));
+        still_valid = sym_tab->lookup(feature_decl_type) && still_valid;
+        attrib->get_init_expr()->set_type(No_type);
       } else if (sym_tab->lookup(feature_decl_type) && sym_tab->lookup(init_expr_type)) {
-          if (feature_decl_type != init_expr_type) {
-            // We know that init_expr_type will have been converted to the class name
-            // by get_expression_type(..).
-            if (feature_decl_type != SELF_TYPE) {
-              still_valid = false;
-            }
+        if (feature_decl_type != init_expr_type) {
+          // We know that init_expr_type will have been converted to the class name
+          // by get_expression_type(..).
+          if (feature_decl_type != SELF_TYPE && !is_super_type_of(feature_decl_type, init_expr_type, sym_tab)) {
+            still_valid = false;
+            DEBUG_ACTION(std::cout << "Cannot have an attribute named self." << std::endl);
+          }
         }
-        if (exp->get_type() == NULL) {
-          DEBUG_ACTION(std::cout << "Before attr validation expr's type is NULL." << std::endl);
+        if (attrib->get_name() == self) {
+          still_valid = false;
         }
         still_valid = still_valid && validate_expression(in_class, c, attrib->get_init_expr(), sym_tab);
-        DEBUG_ACTION(std::cout << "After attr validation expr's type is " << exp->get_type() << std::endl);
       } else {
         still_valid = false;
       }
@@ -59,9 +65,23 @@ namespace mycode {
       if (sym_tab->lookup(method_decl_return_type)) {
         // Then, if initialization expression is okay return true, else false.
         Formals method_formals = method->get_formals();
+        method_class* corresponding_parent_method = (method_class*)get_method_from_ancestry(method->get_name(), in_class->get_parent_name() ,sym_tab);
+        if (corresponding_parent_method) { //Signatures must match.
+          Formals parent_formals = corresponding_parent_method->get_formals();
+          if (parent_formals->len() != method_formals->len()) {
+            still_valid = false;
+          } else {
+            for (int i = parent_formals->first(); parent_formals->more(i); i = parent_formals->next(i)) {
+              if (parent_formals->nth(i)->get_type() != method_formals->nth(i)->get_type()) {
+                still_valid == false;
+              }
+            }
+          }
+        }
         sym_tab->enterscope();
         for (int i = method_formals->first(); method_formals->more(i); i = method_formals->next(i)) {
-          if (!sym_tab->lookup(method_formals->nth(i)->get_type())) {
+          if (!sym_tab->lookup(method_formals->nth(i)->get_type()) ||
+               method_formals->nth(i)->get_name() == self) {
             /* If any parameter type is bad, return false. */
             still_valid = false;
           }
@@ -72,9 +92,10 @@ namespace mycode {
         method_expr_return_type = get_expression_type(in_class, method->get_expr(), sym_tab);
         if (method_expr_return_type != method_decl_return_type) {
           if (method_decl_return_type != SELF_TYPE) {
-            DEBUG_ACTION(std::cout << "*** Bad return type" << std::endl);
-            DEBUG_ACTION(std::cout << "[decl type: " << method_decl_return_type << "] vs [expr type: " << method_expr_return_type << "] " << std::endl);
-            still_valid = false;
+            DEBUG_ACTION(std::cout << "method validation says types don't match" << std::endl);
+            if (!is_super_type_of(method_decl_return_type, method_expr_return_type, sym_tab)) {
+              still_valid = false;
+            }
           }
         }
         sym_tab->exitscope();

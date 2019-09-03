@@ -116,6 +116,12 @@ ClassTable::ClassTable(Classes classes) : semant_errors(0) , error_stream(cerr) 
   std::vector<Class_> user_classes_list;
 
   for (int i = classes->first(); classes->more(i); i = classes->next(i)) {
+    if (classes->nth(i)->get_name() == Int ||
+        classes->nth(i)->get_name() == Str ||
+        classes->nth(i)->get_name() == IO ||
+        classes->nth(i)->get_name() == Bool ) {
+      semant_error(classes->nth(i)) << "Don't redefine default class" << std::endl;;
+    }
     classes_list.push_back(classes->nth(i));
     user_classes_list.push_back(classes->nth(i));
   }
@@ -303,11 +309,11 @@ void program_class::semant()
   mycode::initialize_symbol_table_with_globals(classes_list, symbol_table);
   for (int i = 0; classes->more(i); i = classes->next(i)) {
     Class_ c = classes->nth(i);
-    if (mycode::validate_class(c, symbol_table) ) {
-      
+    if (mycode::validate_class(c, symbol_table) ) {      
+      DEBUG_ACTION(std::cout << "Class " << ((class__class*)c->copy_Class_())->get_name() << " is okay."<< std::endl);
     } else {
       DEBUG_ACTION(std::cout << "Error! while validating class " << ((class__class*)c->copy_Class_())->get_name() << std::endl);
-      classtable->semant_error(c);
+      classtable->semant_error(c) << "Error validating class" << std::endl;
     }
   }
 

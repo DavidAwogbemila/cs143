@@ -165,8 +165,7 @@ bool validate_expression(Class_ in_class, Feature in_feature, Expression& e, Sym
     }
   }
   if (Symbol expr_type = get_expression_type(in_class, e, sym_tab)) {
-    e->type = expr_type;
-    //e->set_type(idtable.add_string(expr_type->get_string()));
+    e->set_type(idtable.add_string(expr_type->get_string()));
     DEBUG_ACTION(std::cout << "Expression type set to " << expr_type << std::endl);
   } else {
     e->set_type(idtable.add_string(Object->get_string()));
@@ -185,10 +184,12 @@ bool validate_exp_assign(Class_ in_class, Feature in_feature, Expression e, Symb
     still_valid =  validate_expression(in_class, in_feature, assign_exp->get_expr(), sym_tab);
     if (sym_tab->lookup(assign_exp->get_name())) {
       type = assignee_data->get_type();
-      return  still_valid && type == get_expression_type(in_class, assign_exp->get_expr(), sym_tab);
+      return still_valid && (type == get_expression_type(in_class, assign_exp->get_expr(), sym_tab) ||
+                            is_super_type_of(type, get_expression_type(in_class, assign_exp->get_expr(), sym_tab), sym_tab));
     } else {
       type = find_type_of_attribute_in_ancestry(assign_exp->get_name(), in_class->get_name(), sym_tab);
-      return still_valid && type == get_expression_type(in_class, assign_exp->get_expr(), sym_tab);
+      return still_valid && (type == get_expression_type(in_class, assign_exp->get_expr(), sym_tab) ||
+                            is_super_type_of(type, get_expression_type(in_class, assign_exp->get_expr(), sym_tab), sym_tab));
     }
   } else {
     return false;
@@ -370,7 +371,11 @@ bool validate_exp_block(Class_ in_class, Feature in_feature, Expression e, Symbo
   
   for (int i = expressions->first(); expressions->more(i); i = expressions->next(i)) {
     Expression nth_exp = expressions->nth(i);
-    still_valid = validate_expression(in_class, in_feature, nth_exp, sym_tab) && still_valid;
+    bool okay = validate_expression(in_class, in_feature, nth_exp, sym_tab) && still_valid;
+    if (!okay) {
+      DEBUG_ACTION(std::cout << "Block says expr # " << i << " is not okay." << std::endl);
+    }
+    still_valid = okay && still_valid;
   }
 
   return still_valid;

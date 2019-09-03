@@ -60,6 +60,24 @@ Feature get_method_from_ancestry(Symbol feature_name, Symbol class_name, SymbolT
   return NULL;
 }
 
+Feature get_attribute_from_ancestry(Symbol feature_name, Symbol class_name, SymbolTable<Symbol, symbol_table_data>*& sym_tab) {
+  auto data = sym_tab->lookup(class_name);
+  if (data) {
+    Features fs = data->features;
+    if (fs == NULL) {
+      return NULL;
+    }
+    for (int i = fs->first(); fs->more(i); i = fs->next(i)) {
+      Feature f = fs->nth(i);
+      if (f->get_type() == 'a' && f->get_name() == feature_name) {
+        return f;
+      }
+    }
+    return get_attribute_from_ancestry(feature_name, data->parent, sym_tab);
+  }
+  return NULL;
+}
+
 Symbol find_type_of_attribute_in_ancestry(Symbol feature_name, Symbol class_name, SymbolTable<Symbol, symbol_table_data>*&sym_tab) {
   // DEBUG_ACTION(std::cout << "looking for " << feature_name << " in class " << class_name << std::endl);
   auto data = sym_tab->lookup(class_name);
@@ -166,11 +184,11 @@ Symbol get_expression_type(Class_ c, Expression e, SymbolTable<Symbol, symbol_ta
             if (f->get_type() == 'a') { // not a method, can't be used for dispatch.
               return NULL; 
             }
-            return f->get_return_type() == SELF_TYPE ? c->get_name() : f->get_return_type();
+            return f->get_return_type() == SELF_TYPE ? expr_type : f->get_return_type();
           }
         }
         if (Feature f = get_method_from_ancestry(dispatch_exp->get_name(), c->get_name(), sym_tab)) {
-          return f->get_return_type();
+            return f->get_return_type() == SELF_TYPE ? expr_type : f->get_return_type();
         }
         return NULL;
       }

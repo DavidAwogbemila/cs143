@@ -1,9 +1,7 @@
-class A {
-  x: Int <- 0;
-  y: Int <- x <- (new Int);
-};
+class Main{main():Int{0};};
 
-class B inherits A {
-  i: Int <- x <- j;
-  j: Int <- 5000 + 50000;
+class A {
+a:Object<-0;
+b:Object<-"";
+c:Object<-true;
 };
