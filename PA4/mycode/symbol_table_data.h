@@ -2,7 +2,7 @@
 
 #include "cool-tree.h"
 
-#define DEBUGGING_
+#define DEBUGGING
 
 #ifdef DEBUGGING
 #define DEBUG_ACTION(x) x << std::flush

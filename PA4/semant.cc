@@ -117,10 +117,17 @@ ClassTable::ClassTable(Classes classes) : semant_errors(0) , error_stream(cerr) 
 
   for (int i = classes->first(); classes->more(i); i = classes->next(i)) {
     if (classes->nth(i)->get_name() == Int ||
+        classes->nth(i)->get_name() == Object ||
         classes->nth(i)->get_name() == Str ||
-        classes->nth(i)->get_name() == IO ||
+        classes->nth(i)->get_name() == IO  ||
         classes->nth(i)->get_name() == Bool ) {
       semant_error(classes->nth(i)) << "Don't redefine default class" << std::endl;;
+    }
+
+    if (classes->nth(i)->get_parent_name() == Int ||
+        classes->nth(i)->get_parent_name() == Str ||
+        classes->nth(i)->get_parent_name() == Bool ) {
+      semant_error(classes->nth(i)) << "It's an error to inherit from "  << classes->nth(i)->get_parent_name() << std::endl;;
     }
     classes_list.push_back(classes->nth(i));
     user_classes_list.push_back(classes->nth(i));
@@ -132,8 +139,7 @@ ClassTable::ClassTable(Classes classes) : semant_errors(0) , error_stream(cerr) 
     DEBUG_ACTION(std::cout << "Built inheritance graph successfully." << std::endl);
   } else {
     DEBUG_ACTION(std::cout << "Unable to build inheritance graph. Program is semantically incorrect." << std::endl);
-    semant_error(faulty_class);
-    exit(1);
+    semant_error(faulty_class) << "Error with class " << faulty_class->get_name() << endl;
   }
 
 }
@@ -307,13 +313,20 @@ void program_class::semant()
   SymbolTable<Symbol, mycode::symbol_table_data>* symbol_table(new SymbolTable<Symbol, mycode::symbol_table_data>);
 
   mycode::initialize_symbol_table_with_globals(classes_list, symbol_table);
-  for (int i = 0; classes->more(i); i = classes->next(i)) {
-    Class_ c = classes->nth(i);
-    if (mycode::validate_class(c, symbol_table) ) {      
-      DEBUG_ACTION(std::cout << "Class " << ((class__class*)c->copy_Class_())->get_name() << " is okay."<< std::endl);
-    } else {
-      DEBUG_ACTION(std::cout << "Error! while validating class " << ((class__class*)c->copy_Class_())->get_name() << std::endl);
-      classtable->semant_error(c) << "Error validating class" << std::endl;
+  
+  if (classtable->errors()) {
+  	cerr << "Compilation halted due to static semantic errors." << endl;
+	  exit(1);
+  }
+  else {
+    for (int i = 0; classes->more(i); i = classes->next(i)) {
+      Class_ c = classes->nth(i);
+      DEBUG_ACTION(std::cout << " Validating Class " << ((class__class*)c->copy_Class_())->get_name() << std::endl);
+      if (mycode::validate_class(c, symbol_table) ) {      
+        DEBUG_ACTION(std::cout << "Class " << ((class__class*)c->copy_Class_())->get_name() << " is okay."<< std::endl);
+      } else {
+        classtable->semant_error(c) << "Error validating class " << ((class__class*)c->copy_Class_())->get_name() << std::endl;
+      }
     }
   }
 

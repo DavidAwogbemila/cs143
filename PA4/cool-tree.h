@@ -451,7 +451,7 @@ public:
    void dump(ostream& stream, int n);
    expr_type get_expr_type() { return expr_type::EXP_TYPCASE; }
    Expression& get_expr() { return expr; }
-   Cases get_cases() const { return cases->copy_list(); }
+   Cases& get_cases() { return cases; }
 
 
 #ifdef Expression_SHARED_EXTRAS
