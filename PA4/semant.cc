@@ -144,7 +144,7 @@ ClassTable::ClassTable(Classes classes) : semant_errors(0) , error_stream(cerr) 
     user_classes_list.push_back(classes->nth(i));
   }
   if (!main_found) {
-    semant_error(classes->nth(0)) << "Class Main is not defined" << std::endl;
+    semant_error() << "Class Main is not defined." << std::endl;
   }
 
   mycode::inheritance_graph* i_graph = mycode::build_inheritance_graph(classes_list, faulty_class);
