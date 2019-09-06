@@ -114,14 +114,17 @@ ClassTable::ClassTable(Classes classes) : semant_errors(0) , error_stream(cerr) 
   install_basic_classes();
   Class_ faulty_class = NULL;
   std::vector<Class_> user_classes_list;
+  std::vector<Symbol> class_names_seen_so_far;
+  bool main_found = false;
 
   for (int i = classes->first(); classes->more(i); i = classes->next(i)) {
     if (classes->nth(i)->get_name() == Int ||
         classes->nth(i)->get_name() == Object ||
         classes->nth(i)->get_name() == Str ||
         classes->nth(i)->get_name() == IO  ||
-        classes->nth(i)->get_name() == Bool ) {
-      semant_error(classes->nth(i)) << "Don't redefine default class" << std::endl;;
+        classes->nth(i)->get_name() == Bool ||
+        classes->nth(i)->get_name() == SELF_TYPE ) {
+      semant_error(classes->nth(i)) << "Don't redefine default class or use SELF_TYPE as class name" << std::endl;;
     }
 
     if (classes->nth(i)->get_parent_name() == Int ||
@@ -129,8 +132,19 @@ ClassTable::ClassTable(Classes classes) : semant_errors(0) , error_stream(cerr) 
         classes->nth(i)->get_parent_name() == Bool ) {
       semant_error(classes->nth(i)) << "It's an error to inherit from "  << classes->nth(i)->get_parent_name() << std::endl;;
     }
+
+    main_found = main_found || classes->nth(i)->get_name() == Main;
+
+    if (std::find(class_names_seen_so_far.begin(), class_names_seen_so_far.end(), classes->nth(i)->get_name()) == class_names_seen_so_far.end()) {
+      class_names_seen_so_far.push_back(classes->nth(i)->get_name());
+    } else {
+      semant_error(classes->nth(i)) << "Error: class" << classes->nth(i)->get_name() << " redefined." << std::endl;
+    }
     classes_list.push_back(classes->nth(i));
     user_classes_list.push_back(classes->nth(i));
+  }
+  if (!main_found) {
+    semant_error(classes->nth(0)) << "Class Main is not defined" << std::endl;
   }
 
   mycode::inheritance_graph* i_graph = mycode::build_inheritance_graph(classes_list, faulty_class);
@@ -241,12 +255,6 @@ void ClassTable::install_basic_classes() {
 				      no_expr()))),
 	     filename);
 
-
-
-
-
-
-  
   classes_list.push_back(Object_class);
   classes_list.push_back(IO_class);
   classes_list.push_back(Int_class);
@@ -266,7 +274,7 @@ void ClassTable::install_basic_classes() {
 //
 //    ostream& ClassTable::semant_error(Symbol filename, tree_node *t)  
 //       print a line number and filename
-//
+//Main_Class
 ///////////////////////////////////////////////////////////////////
 
 ostream& ClassTable::semant_error(Class_ c)
